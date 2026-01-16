@@ -1,16 +1,42 @@
 const CACHE_NAME = "goleio-v2";
+
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./goleio1.png"
+  "./cronometroeplacar.html",
+  "./manifest.json",
+  "./service-worker.js",
+  "./goleio1.png",
+  "./icon-512.png"
 ];
 
+// INSTALAÇÃO
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(FILES_TO_CACHE);
+    })
   );
+  self.skipWaiting();
 });
 
+// ATIVAÇÃO
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.map(key => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      )
+    )
+  );
+  self.clients.claim();
+});
+
+// FETCH (offline-first)
 self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
@@ -18,4 +44,3 @@ self.addEventListener("fetch", event => {
     })
   );
 });
-
